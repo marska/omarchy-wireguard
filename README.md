@@ -2,6 +2,8 @@
 
 WireGuard status and on/off toggle for the [Omarchy](https://omarchy.org/) bar.
 
+![WireGuard popup in the Omarchy bar](screenshot.png)
+
 A bar widget for a WireGuard tunnel managed by NetworkManager. The icon is lit
 when the tunnel is up and dimmed when it is down. Clicking it opens a popup in
 the style of the built-in network panel:
