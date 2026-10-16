@@ -8,7 +8,7 @@ A bar widget for a WireGuard tunnel managed by NetworkManager. The icon is lit
 when the tunnel is up and dimmed when it is down. Clicking it opens a popup in
 the style of the built-in network panel:
 
-- on/off switch (`nmcli connection up/down`, no sudo needed),
+- on/off switch (`nmcli connection up/down`, runs as your user, no root privileges),
 - ping and packet loss through the tunnel,
 - live receive/send rate, total downloaded/uploaded, tunnel IP, connection time,
 - peer endpoint, allowed IPs and public key (click to copy),
