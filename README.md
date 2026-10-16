@@ -2,7 +2,7 @@
 
 WireGuard status and on/off toggle for the [Omarchy](https://omarchy.org/) bar.
 
-![WireGuard popup in the Omarchy bar](screenshot.png)
+![WireGuard popup in the Omarchy bar](preview.png)
 
 A bar widget for a WireGuard tunnel managed by NetworkManager. The icon is lit
 when the tunnel is up and dimmed when it is down. Clicking it opens a popup in
@@ -34,6 +34,15 @@ Move it next to the network icon if you like:
 ```bash
 omarchy bar move marska.wireguard --before omarchy.network
 ```
+
+## Remove
+
+```bash
+omarchy plugin remove marska.wireguard
+```
+
+This deletes the plugin from `~/.config/omarchy/plugins/` and drops its bar entry.
+The WireGuard connection itself stays in NetworkManager untouched.
 
 ## Usage
 
