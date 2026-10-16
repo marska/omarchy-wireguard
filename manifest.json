@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "marska.wireguard",
+  "name": "WireGuard",
+  "version": "1.1.0",
+  "author": "marska",
+  "license": "MIT",
+  "description": "NetworkManager WireGuard tunnel in the Omarchy bar: popup with an on/off switch, ping, throughput, peer and DNS details.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "WireGuard",
+    "description": "Left click opens the popup (switch, ping, traffic, peer, DNS), right click toggles the tunnel, middle click refreshes.",
+    "category": "Network",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "connection": "",
+      "pingHost": "",
+      "dnsTestHost": "example.com",
+      "refreshIntervalSec": 60
+    },
+    "schema": [
+      {
+        "key": "connection",
+        "type": "string",
+        "label": "Connection name",
+        "defaultValue": "",
+        "description": "NetworkManager connection to control. Empty means the first WireGuard connection."
+      },
+      {
+        "key": "pingHost",
+        "type": "string",
+        "label": "Ping host",
+        "defaultValue": "",
+        "description": "Host pinged through the tunnel. Empty means the tunnel's DNS server."
+      },
+      {
+        "key": "dnsTestHost",
+        "type": "string",
+        "label": "DNS test host",
+        "defaultValue": "example.com",
+        "description": "Name resolved through the tunnel to time DNS lookups."
+      },
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Fallback refresh interval (seconds)",
+        "min": 10,
+        "max": 3600,
+        "step": 10,
+        "defaultValue": 60
+      }
+    ]
+  }
+}
