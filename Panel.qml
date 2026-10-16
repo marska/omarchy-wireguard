@@ -57,17 +57,17 @@ Panel {
   property real now: Date.now() / 1000
 
   readonly property string stateText: {
-    if (missing) return "BRAK PROFILU"
-    if (info.state === "activating") return "ŁĄCZENIE…"
-    if (info.state === "deactivating") return "ROZŁĄCZANIE…"
-    return connected ? "POŁĄCZONY" : "ROZŁĄCZONY"
+    if (missing) return "NO PROFILE"
+    if (info.state === "activating") return "CONNECTING…"
+    if (info.state === "deactivating") return "DISCONNECTING…"
+    return connected ? "CONNECTED" : "DISCONNECTED"
   }
 
   readonly property string tooltip: {
-    if (missing) return "WireGuard: brak połączenia w NetworkManagerze"
+    if (missing) return "WireGuard: no connection in NetworkManager"
     var name = info.name !== "" ? info.name : "WireGuard"
     if (lastError !== "") return name + ": " + lastError
-    if (connected) return name + ": połączony" + (info.address !== "" ? " (" + info.address + ")" : "")
+    if (connected) return name + ": connected" + (info.address !== "" ? " (" + info.address + ")" : "")
     return name + ": " + stateText.toLowerCase()
   }
 
@@ -148,7 +148,7 @@ Panel {
     onExited: function(exitCode) {
       if (exitCode !== 0) {
         var message = String(toggleErr.text || "").trim().replace(/^Error:\s*/, "")
-        root.lastError = message !== "" ? message : "nmcli zakończył się kodem " + exitCode
+        root.lastError = message !== "" ? message : "nmcli exited with code " + exitCode
         Quickshell.execDetached(["notify-send", "-u", "critical", "WireGuard", root.lastError])
       }
       root.refresh()
@@ -284,7 +284,7 @@ Panel {
 
           PanelToolTip {
             visible: powerSwitch.containsMouse
-            text: root.connected ? "Rozłącz VPN (w)" : "Połącz VPN (w)"
+            text: root.connected ? "Disconnect VPN (w)" : "Connect VPN (w)"
             fontFamily: root.bar.fontFamily
           }
         }
@@ -335,32 +335,32 @@ Panel {
         DetailValue {
           text: root.pingSamples.length === 0 ? "--" : Model.formatMs(root.pingLatency)
           color: root.packetLoss > 0 ? root.bar.urgent : root.bar.foreground
-          tooltipText: root.pingHost !== "" ? "Ping do " + root.pingHost + " przez tunel" : ""
+          tooltipText: root.pingHost !== "" ? "Ping to " + root.pingHost + " through the tunnel" : ""
           hoverTip: true
         }
-        InfoLabel { text: "Utrata" }
+        InfoLabel { text: "Packet Loss" }
         DetailValue {
           text: root.pingSamples.length === 0 ? "--" : root.packetLoss + "%"
           color: root.packetLoss > 0 ? root.bar.urgent : root.bar.foreground
         }
 
-        InfoLabel { text: "Odbieranie" }
+        InfoLabel { text: "Receiving" }
         DetailValue { text: root.info.rx >= 0 ? Model.formatRate(root.downloadRate) : "--" }
-        InfoLabel { text: "Wysyłanie" }
+        InfoLabel { text: "Sending" }
         DetailValue { text: root.info.tx >= 0 ? Model.formatRate(root.uploadRate) : "--" }
 
-        InfoLabel { text: "Pobrane" }
+        InfoLabel { text: "Downloaded" }
         DetailValue { text: root.info.rx >= 0 ? Model.formatBytes(root.info.rx) : "--" }
-        InfoLabel { text: "Wysłane" }
+        InfoLabel { text: "Uploaded" }
         DetailValue { text: root.info.tx >= 0 ? Model.formatBytes(root.info.tx) : "--" }
 
-        InfoLabel { text: "Adres IP" }
+        InfoLabel { text: "IP Address" }
         DetailValue {
           text: root.info.address || "--"
           copyable: !!root.info.address
-          tooltipText: "Kopiuj IP"
+          tooltipText: "Copy IP"
         }
-        InfoLabel { text: "Czas" }
+        InfoLabel { text: "Uptime" }
         DetailValue { text: root.info.since > 0 ? Model.formatDuration(root.now - root.info.since) : "--" }
       }
 
@@ -391,16 +391,16 @@ Panel {
           DetailValue {
             text: root.info.endpoint || "--"
             copyable: !!root.info.endpoint
-            tooltipText: "Kopiuj endpoint"
+            tooltipText: "Copy endpoint"
           }
           InfoLabel { text: "Allowed IPs" }
           DetailValue { text: root.info.allowedIps || "--" }
-          InfoLabel { text: "Klucz publiczny" }
+          InfoLabel { text: "Public Key" }
           DetailValue {
             text: Model.shortKey(root.info.peerKey)
             copyable: root.info.peerKey !== ""
             copyValue: root.info.peerKey
-            tooltipText: "Kopiuj pełny klucz"
+            tooltipText: "Copy full key"
           }
         }
       }
@@ -428,17 +428,17 @@ Panel {
           columnSpacing: Style.space(20)
           rowSpacing: Style.spacing.labelGap
 
-          InfoLabel { text: "Serwer" }
+          InfoLabel { text: "Server" }
           DetailValue {
             text: root.info.dns || "--"
             copyable: !!root.info.dns
-            tooltipText: "Kopiuj adres DNS"
+            tooltipText: "Copy DNS address"
           }
-          InfoLabel { text: "Zapytanie" }
+          InfoLabel { text: "Lookup" }
           DetailValue {
-            text: root.dnsLookupMs === -2 ? "--" : (root.dnsLookupMs < 0 ? "Błąd" : Model.formatMs(root.dnsLookupMs))
+            text: root.dnsLookupMs === -2 ? "--" : (root.dnsLookupMs < 0 ? "Failed" : Model.formatMs(root.dnsLookupMs))
             color: root.dnsLookupMs === -1 ? root.bar.urgent : root.bar.foreground
-            tooltipText: "Czas rozwiązania " + root.dnsTestHost + " przez tunel"
+            tooltipText: "Time to resolve " + root.dnsTestHost + " through the tunnel"
             hoverTip: true
           }
         }
@@ -450,7 +450,7 @@ Panel {
     property bool copyable: false
     property bool hoverTip: false
     property string copyValue: text
-    property string tooltipText: "Kopiuj do schowka"
+    property string tooltipText: "Copy to clipboard"
 
     Layout.fillWidth: true
     horizontalAlignment: Text.AlignRight
