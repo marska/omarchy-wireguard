@@ -10,6 +10,8 @@ the style of the built-in network panel:
 
 - on/off switch (`nmcli connection up/down`, runs as your user, no root privileges),
 - ping and packet loss through the tunnel,
+- a minimal line chart of the last 2 minutes of pings, with jitter and the worst
+  ping; lost probes break the line with a red bar,
 - live receive/send rate, total downloaded/uploaded, tunnel IP, connection time,
 - peer endpoint, allowed IPs and public key (click to copy),
 - tunnel DNS server and lookup time through the tunnel.

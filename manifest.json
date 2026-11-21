@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "marska.wireguard",
   "name": "WireGuard",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "marska",
   "license": "MIT",
-  "description": "NetworkManager WireGuard tunnel in the Omarchy bar: popup with an on/off switch, ping, throughput, peer and DNS details.",
+  "description": "NetworkManager WireGuard tunnel in the Omarchy bar: popup with an on/off switch, ping chart, throughput, peer and DNS details.",
   "kinds": [
     "bar-widget"
   ],
@@ -14,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "WireGuard",
-    "description": "Left click opens the popup (switch, ping, traffic, peer, DNS), right click toggles the tunnel, middle click refreshes.",
+    "description": "Left click opens the popup (switch, ping chart, traffic, peer, DNS), right click toggles the tunnel, middle click refreshes.",
     "category": "Network",
     "allowMultiple": false,
     "defaultSection": "right",

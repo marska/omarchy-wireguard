@@ -58,6 +58,19 @@ function parsePing(text) {
   return match ? parseFloat(match[1]) : -1
 }
 
+// Mean change between consecutive answered probes (RFC 3550 style, unsmoothed);
+// -1 until there are two in a row.
+function jitter(samples) {
+  var sum = 0
+  var count = 0
+  for (var i = 1; i < samples.length; i++) {
+    if (samples[i] < 0 || samples[i - 1] < 0) continue
+    sum += Math.abs(samples[i] - samples[i - 1])
+    count++
+  }
+  return count > 0 ? sum / count : -1
+}
+
 function parseDnsLookup(text) {
   var match = /in ([0-9.]+)\s*ms/.exec(String(text || ""))
   return match ? parseFloat(match[1]) : -1

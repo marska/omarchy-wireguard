@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import qs.Commons
@@ -41,18 +42,23 @@ Panel {
   property real downloadRate: 0
   property real uploadRate: 0
 
-  property var pingSamples: []           // ms, -1 for a lost probe
-  readonly property int pingWindow: 20
+  property var pingSamples: []           // ms, -1 for a lost probe; newest last
+  property real lastPingAt: 0
+  readonly property int pingWindow: 20   // samples behind the ping and loss figures
+  readonly property int pingHistory: 60  // samples in the chart: 2 min at one probe per 2 s
+  readonly property var recentPings: pingSamples.slice(-pingWindow)
   readonly property real pingLatency: {
-    var recent = pingSamples.slice(-5).filter(function(v) { return v >= 0 })
+    var recent = recentPings.slice(-5).filter(function(v) { return v >= 0 })
     if (recent.length === 0) return -1
     return recent.reduce(function(a, b) { return a + b }, 0) / recent.length
   }
   readonly property int packetLoss: {
-    if (pingSamples.length === 0) return 0
-    var lost = pingSamples.filter(function(v) { return v < 0 }).length
-    return Math.round(100 * lost / pingSamples.length)
+    if (recentPings.length === 0) return 0
+    var lost = recentPings.filter(function(v) { return v < 0 }).length
+    return Math.round(100 * lost / recentPings.length)
   }
+  readonly property real pingJitter: Model.jitter(pingSamples)
+  readonly property real pingMax: Math.max.apply(null, pingSamples.concat([-1]))
   property real dnsLookupMs: -2          // -2 = no sample yet, -1 = failed
   property real now: Date.now() / 1000
 
@@ -107,7 +113,8 @@ Panel {
   }
 
   function pushPing(ms) {
-    pingSamples = pingSamples.concat([ms]).slice(-pingWindow)
+    pingSamples = pingSamples.concat([ms]).slice(-pingHistory)
+    lastPingAt = Date.now() / 1000
   }
 
   function copyToClipboard(value) {
@@ -117,7 +124,12 @@ Panel {
 
   onPreferredConnectionChanged: refresh()
   onPingHostChanged: pingSamples = []
-  onOpenedChanged: if (opened) refresh()
+  onOpenedChanged: {
+    if (!opened) return
+    // Probes pause while the popup is closed; don't join old samples to new ones.
+    if (Date.now() / 1000 - lastPingAt > 10) pingSamples = []
+    refresh()
+  }
 
   IpcHandler {
     target: "marska.wireguard"
@@ -362,6 +374,98 @@ Panel {
         }
         InfoLabel { text: "Uptime" }
         DetailValue { text: root.info.since > 0 ? Model.formatDuration(root.now - root.info.since) : "--" }
+      }
+
+      // ---------- Ping history ----------
+      // Last 2 min of pings, newest on the right, scaled from 0 so a steady
+      // link reads as a flat line. Lost probes break the line with a red bar.
+      Column {
+        visible: root.connected
+        width: parent.width
+        spacing: Style.spacing.labelGap
+
+        Item {
+          id: pingChart
+          width: parent.width
+          height: Style.space(36)
+          clip: true
+
+          readonly property var samples: root.pingSamples
+          readonly property real lineWidth: Math.max(1, Style.space(1.5))
+          readonly property real step: width / Math.max(1, root.pingHistory - 1)
+          // Headroom above the worst sample; the floor keeps sub-ms LAN noise flat.
+          readonly property real peak: Math.max(5, 1.15 * root.pingMax)
+
+          function xAt(i) { return width - (samples.length - 1 - i) * step }
+          function yAt(ms) { return lineWidth + (height - 2 * lineWidth) * (1 - ms / peak) }
+
+          readonly property var segments: {
+            var out = []
+            var run = []
+            for (var i = 0; i <= samples.length; i++) {
+              if (i < samples.length && samples[i] >= 0) {
+                run.push(Qt.point(xAt(i), yAt(samples[i])))
+                continue
+              }
+              // A lone sample between losses has no neighbour; draw it as a dash.
+              if (run.length === 1) run = [Qt.point(run[0].x - step / 2, run[0].y), Qt.point(run[0].x + step / 2, run[0].y)]
+              if (run.length > 0) out.push(run)
+              run = []
+            }
+            return out
+          }
+
+          Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: Style.spacing.hairline
+            color: root.bar.foreground
+            opacity: 0.15
+          }
+
+          Repeater {
+            model: pingChart.samples.length
+            Rectangle {
+              visible: pingChart.samples[index] < 0
+              x: pingChart.xAt(index) - width / 2
+              width: Math.max(2, Style.space(2))
+              height: pingChart.height
+              color: root.bar.urgent
+              opacity: 0.5
+            }
+          }
+
+          Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+              strokeColor: root.bar.foreground
+              strokeWidth: pingChart.lineWidth
+              fillColor: "transparent"
+              joinStyle: ShapePath.RoundJoin
+              capStyle: ShapePath.RoundCap
+              PathMultiline { paths: pingChart.segments }
+            }
+          }
+        }
+
+        Item {
+          width: parent.width
+          implicitHeight: chartSpan.implicitHeight
+
+          InfoLabel {
+            id: chartSpan
+            anchors.left: parent.left
+            text: "Last 2 min"
+          }
+          InfoLabel {
+            anchors.right: parent.right
+            visible: root.pingMax >= 0
+            text: (root.pingJitter >= 0 ? "Jitter " + Model.formatMs(root.pingJitter) + " · " : "") + "Max " + Model.formatMs(root.pingMax)
+          }
+        }
       }
 
       // ---------- Peer ----------
